@@ -1,0 +1,64 @@
+# Set Random Forest
+
+library(randomForest)
+
+Hem_Forest <- randomForest(Hemorrhagic_Presentation ~ AVM.Size + Eloquence + Deep.Drainage + Diffuse + Sex + Location + Laterality + Presenting.Age + Aneurysm + Intranidal.Aneurysm + Deep.Location + Supratentorial, data= SuppData, proximity=TRUE)
+
+
+varImpPlot(Hem_Forest, main = NULL)
+
+importance(Hem_Forest)
+
+summary(Hem_Forest)
+
+Variables<- c("Presenting Age", "AVM Size", "Location", "Laterality", "Deep Drainage", "Diffuse", "Sex", "Eloquence", "Supratentorial", "Intranidal Aneurysm", "Deep Location", "Aneurysm" )
+
+Importance<- c(16.958120, 22.014625, 5.435967, 3.255468, 2.439935, 2.214904, 2.693878, 2.707963, 2.758672, 3.543820, 1.674813, 16.623454)
+mock<- data.frame(Variables, Importance)
+
+mock <- transform(mock, Variables = reorder(Variables, -Importance))
+
+gradient_plot<- ggplot(mock, aes(Variables,Importance)) + geom_bar(stat='identity') +theme_classic()
+
+
+# Set Gradient Boost
+
+library(gbm)
+
+SuppData$Bleeding<- SuppData$Hemorrhagic_Presentation
+levels(SuppData$Bleeding) <- c("0", "1")
+
+SuppData$Bleeding <- as.numeric(SuppData$Bleeding)
+
+SuppData$Bleeding <- as.numeric(SuppData$Bleeding) - 1
+
+hem_boost<- gbm(Bleeding~ AVM.Size + Eloquence + Deep.Drainage + Diffuse + Sex + Location + Laterality + Presenting.Age + Aneurysm + Intranidal.Aneurysm + Deep.Location + Supratentorial, data= SuppData, distribution= "bernoulli", n.trees=10000,shrinkage=0.1, interaction.depth=4)
+
+
+Variables<- c("Presenting Age", "AVM Size", "Location", "Laterality", "Deep Drainage", "Diffuse", "Sex", "Eloquence", "Supratentorial", "Intranidal Aneurysm", "Deep Location", "Aneurysm" )
+Importance<- c(33.585243, 31.080380, 9.405372, 4.530588, 3.289506, 3.202490, 4.294443, 3.236305, 3.127886, 2.300356, 1.947432, 0  )
+mock<- data.frame(Variables, Importance)
+
+mock <- transform(mock, Variables = reorder(Variables, -Importance))
+
+gradient_plot_2<- ggplot(mock, aes(Variables,Importance)) + geom_bar(stat='identity') +theme_classic()
+
+
+# Set Adaboost
+
+library(adabag)
+
+hem_adaboost<- boosting(Hemorrhagic_Presentation ~ AVM.Size + Eloquence + Deep.Drainage + Diffuse + Sex + Location + Laterality + Presenting.Age + Aneurysm + Intranidal.Aneurysm + Deep.Location + Supratentorial, data= SuppData)
+
+hem_adaboost$importance
+
+importanceplot(hem_adaboost)
+
+
+Variables<- c("Presenting Age", "AVM Size", "Location", "Laterality", "Deep Drainage", "Diffuse", "Sex", "Eloquence", "Supratentorial", "Intranidal Aneurysm", "Deep Location", "Aneurysm" )
+Importance<- c(38.794351 ,  31.813468 ,   9.291517, 2.947887 ,2.787084, 2.795000 , 2.610939, 3.396192,  1.738456 ,  2.567563 , 1.257542, 0 )
+mock<- data.frame(Variables, Importance)
+
+mock <- transform(mock, Variables = reorder(Variables, -Importance))
+
+gradient_plot<- ggplot(mock, aes(Variables,Importance)) + geom_bar(stat='identity') +theme_classic()
